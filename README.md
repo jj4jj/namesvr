@@ -1,0 +1,2 @@
+# namesvr
+a name server 
