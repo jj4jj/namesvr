@@ -1,0 +1,15 @@
+package namesvc;
+enum RandNameType {
+    EN_RANDNAMETYPE_MIN=0; //cn=最小值
+    EN_RANDNAMETYPE_1=1; //cn=1随机类型
+    EN_RANDNAMETYPE_2=2; //cn=2随机类型
+    EN_RANDNAMETYPE_3=3; //cn=3随机类型
+    EN_RANDNAMETYPE_MAX=4; //cn=最大值
+}
+message RandNameDesc{
+    optional RandNameType randtype=1; //cn=随机类型
+    repeated string name=22;
+}
+message TBRandNameDesc{
+    repeated RandNameDesc list=1;
+}

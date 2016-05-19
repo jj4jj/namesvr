@@ -1,20 +1,23 @@
 #include "dcpots/base/stdinc.h"
 #include "dcpots/base/logger.h"
-
+#include "dcpots/base/dcutils.hpp"
 
 #include "dcpots/dcrpc/client/dccrpc.h"
 
+#include "name_random.h"
 
 #include "name_service.h"
 using namespace std;
 using namespace dcsutil;
 using namespace dcrpc;
 
+NS_BEGIN(namesvc)
+
 static struct {
-    RpcClient   rpc;
+    RpcClient       rpc;
+    name_random_t * name_random{ nullptr };
 } NAME_ENV;
 
-NS_BEGIN(namesvc)
 
 int             namesvc_init(const namesvc_config_t & conf){
     int ret = NAME_ENV.rpc.init(conf.server, 128);
@@ -22,6 +25,7 @@ int             namesvc_init(const namesvc_config_t & conf){
         GLOG_ERR("rpc client init error = %d !", ret);
         return -1;
     }
+    NAME_ENV.name_random = name_random_create(conf.name_lib_file.c_str());
     //todo add local random name lib
     return 0;
 }
@@ -32,6 +36,10 @@ void            namesvc_destroy(){
     NAME_ENV.rpc.destroy();
 }
 int             namesvc_register(const char * name, uint64_t id, int type , namesvc_regist_callback_t cb){
+    if (!name){
+        GLOG_ERR("register name is null > ilegal param !");
+        return -1;
+    }
     RpcValues args;
     //register(name, id, type)
     args.adds(name);
@@ -39,9 +47,10 @@ int             namesvc_register(const char * name, uint64_t id, int type , name
     args.addi(type);
     return NAME_ENV.rpc.call("name", args, std::bind(cb, std::placeholders::_1));
 }
-const char *    namesvc_random(int type){
-#warning "todo implementation"
-    return nullptr;
+const char *    namesvc_random(string & name, int type){
+#warning "todo implementation"    
+    return dcsutil::strcharsetrandom(name);    
+    //namesvc_random(NAME_ENV.name_random, type);
 }
 
 
