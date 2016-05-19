@@ -41,7 +41,7 @@ public:
         int type = args.geti(2);
         //mysql store
         command_t cmd;
-        cmd.cbdata.create(sizeof(MysqlCallBack));
+        cmd.opaque = cookie;
         string strescape;
         strnprintf(cmd.sql, 512, "INSERT INTO name SET type=%d, id=%lu, name='%s', time=%u;",
             type, id, mysql_pool->mysql()->escape(strescape, name.c_str(), name.length()),
@@ -51,11 +51,7 @@ public:
 };
 static void mysql_command_dispatch(void *ud, const result_t & res, const command_t & cmd){
     NameService * service = (NameService*)ud;
-    MysqlCallBack * cb = (MysqlCallBack*)(cmd.cbdata.buffer);
-    uint64_t cookie = cb->cookie;
-    int clientid = cb->clientid;
-    const_cast<msg_buffer_t&>(cmd.cbdata).destroy();
-
+    uint64_t cookie = cmd.opaque;
     RpcValues result;
     if (res.status != 0){
         result.addi(res.status);
@@ -81,7 +77,7 @@ int main(int argc, char ** argv){
         "db:r:d:mysql database name:test;"
         "db-user:r::mysql user name:test;"
         "db-pwd:r::mysql password:123456;"
-        "listen:r:l:rpc listen address (tcp):127.0.0.1:8888;");
+        "listen:r:l:rpc listen address (tcp):127.0.0.1:1888;");
     if (cmdline.getoptstr("version")){
         puts(NAMESVR_VERSION);
         return 0;
