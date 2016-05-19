@@ -3,3 +3,6 @@ namesvr: namesvr.cpp
 
 clean:
 	rm -f namesvr test
+
+
+
