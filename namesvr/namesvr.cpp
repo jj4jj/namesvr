@@ -80,7 +80,8 @@ int main(int argc, char ** argv){
         "listen:r:l:rpc listen address (tcp):127.0.0.1:1888;"
         "daemon:n:D:daemon mode;"
         "log-dir:r::log dir:./;"
-        "log-file:r::log file pattern:namesvr.log;");
+        "log-file:r::log file pattern:namesvr.log;"
+        "log-level:r::log level settings (DEBUG/INFO/...):INFO;");
     if (cmdline.getoptstr("version")){
         puts(NAMESVR_VERSION);
         return 0;
@@ -93,6 +94,7 @@ int main(int argc, char ** argv){
     logger_config_t logconf;
     logconf.dir = cmdline.getoptstr("log-dir");
     logconf.pattern = cmdline.getoptstr("log-file");
+    logconf.lv = INT_LOG_LEVEL(cmdline.getoptstr("log-level"));
     global_logger_init(logconf);
 
     dcrpc::RpcServer	rpc;
