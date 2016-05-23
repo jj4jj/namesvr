@@ -1,10 +1,16 @@
 #!/bin/bash
 
-if [[ $1 = "" ]];then
-	cd client && make protoc=protoc protoi='/usr/include/' protol='-lprotobuf' && make install
-else
-	cd client && make protoc='../../protobuf/bin/protoc' protoi='../../protobuf/include/' && make install
+protoc="protoc"
+protol="-lprotobuf"
+protoi="/usr/include"
+if [[ "x$1" = "xu1" ]];then
+	protoc='../../protobuf/bin/protoc'
+	protoi='../../protobuf/include/'
+	protol='../../protobuf/lib/libprotobuf.a'
+        evl="../../libev/lib/libev.a"
 fi
+
+cd client && make install protoc="$protoc" protoi="$protoi" protol="$protol"
 cd -
-cd namesvr && make protol='../../protobuf/lib/libprotobuf.a' && make install
+cd namesvr && make install protoc="$protoc" protoi="$protoi" protol="$protol" evl="${evl}"
 

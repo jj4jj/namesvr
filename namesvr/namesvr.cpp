@@ -69,11 +69,11 @@ static void mysql_command_dispatch(void *ud, const result_t & res, const command
 }
 
 #define NAMESVR_VERSION	("0.0.1")
-int main(int argc, char ** argv){
+int main(int argc,const char ** argv){
     cmdline_opt_t cmdline(argc, argv);
 
     //todo addres tobe configuration
-    cmdline.parse("version:n:v:version;"
+    cmdline.parse(""
         "db:r:d:mysql database name:test;"
         "db-user:r::mysql user name:test;"
         "db-pwd:r::mysql password:123456;"
@@ -81,11 +81,8 @@ int main(int argc, char ** argv){
         "daemon:n:D:daemon mode;"
         "log-dir:r::log dir:./;"
         "log-file:r::log file pattern:namesvr.log;"
-        "log-level:r::log level settings (DEBUG/INFO/...):INFO;");
-    if (cmdline.getoptstr("version")){
-        puts(NAMESVR_VERSION);
-        return 0;
-    }
+        "log-level:r::log level settings (DEBUG/INFO/...):INFO;",
+		NAMESVR_VERSION);
 
     if (cmdline.hasopt("daemon")){
         dcsutil::daemonlize();
