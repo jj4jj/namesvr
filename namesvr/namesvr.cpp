@@ -7,6 +7,7 @@
 #include "dcpots/base/dcseqnum.hpp"
 #include "dcpots/base/msg_proto.hpp"
 #include "dcpots/base/dcutils.hpp"
+#include "dcpots/base/app.hpp"
 #include "dcpots/utility/mysql/dcmysqlc_pool.h"
 
 using namespace std;
@@ -70,53 +71,47 @@ static void mysql_command_dispatch(void *ud, const result_t & res, const command
 
 #define NAMESVR_VERSION	("0.0.1")
 int main(int argc,const char ** argv){
-    cmdline_opt_t cmdline(argc, argv);
+	struct NameServer : dcsutil::App {
+		dcrpc::RpcServer		rpc;
+		mysqlclient_pool_t		mysql;
+	public:		
+		NameServer():dcsutil::App(NAMESVR_VERSION){
+		}
+		std::string options(){
+			return ""
+				"db:r:d:mysql database name:test;"
+				"db-user:r::mysql user name:test;"
+				"db-pwd:r::mysql password:123456;"
+				"db-host:r::mysql connection host:127.0.0.1;"
+				"db-thread:r::mysql connection thread num:2;"
+				"listen:r:l:rpc listen address (tcp):127.0.0.1:1888;"
+				"";
+		}
+		int on_init(const char * sconfig){
+			const char * listen = cmdopt().getoptstr("listen");
+			if (rpc.init(listen)){
+				return -1;
+			}
+			mysqlclient_t::cnnx_conf_t  config;
+			config.dbname = cmdopt().getoptstr("db");
+			config.ip = cmdopt().getoptstr("db-host");
+			config.uname = cmdopt().getoptstr("db-user");
+			config.passwd = cmdopt().getoptstr("db-pwd");
+			if (mysql.init(config, cmdopt().getoptint("db-thread"))){
+				return -2;
+			}
 
-    //todo addres tobe configuration
-    cmdline.parse(""
-        "db:r:d:mysql database name:test;"
-        "db-user:r::mysql user name:test;"
-        "db-pwd:r::mysql password:123456;"
-        "listen:r:l:rpc listen address (tcp):127.0.0.1:1888;"
-        "daemon:n:D:daemon mode;"
-        "log-dir:r::log dir:./;"
-        "log-file:r::log file pattern:namesvr.log;"
-        "log-level:r::log level settings (DEBUG/INFO/...):INFO;",
-		NAMESVR_VERSION);
-
-    if (cmdline.hasopt("daemon")){
-        dcsutil::daemonlize();
-    }
-
-    logger_config_t logconf;
-    logconf.dir = cmdline.getoptstr("log-dir");
-    logconf.pattern = cmdline.getoptstr("log-file");
-    logconf.lv = INT_LOG_LEVEL(cmdline.getoptstr("log-level"));
-    global_logger_init(logconf);
-
-    dcrpc::RpcServer	rpc;
-    if (rpc.init(cmdline.getoptstr("listen"))){
-        return -1;
-    }
-
-    mysqlclient_pool_t          mysql;
-    mysqlclient_t::cnnx_conf_t  config;
-    config.ip = "127.0.0.1";
-    config.uname = cmdline.getoptstr("db-user");
-    config.passwd = cmdline.getoptstr("db-pwd");
-    config.dbname = cmdline.getoptstr("db");
-    if (mysql.init(config, 2)){
-        return -3;
-    }
-
-    NameService msgsvc(&rpc, &mysql);
-
-    rpc.regis(&msgsvc);
-
-    while (true){
-        rpc.update();
-        mysql.poll();
-    }
-
-    return 0;
+			return 0;
+		}
+		int on_loop(){
+			rpc.update();
+			mysql.poll();
+		}
+	};	
+	NameServer ns;
+	if (ns.init(argc, argv)){
+		GLOG_ERR("nameserver init error !");
+		return -1;
+	}
+	return ns.run();
 }
