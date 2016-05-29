@@ -36,19 +36,39 @@ void            namesvc_destroy(){
     NAME_ENV.rpc.destroy();
 }
 int             namesvc_register(const char * name, uint64_t id, int type , namesvc_regist_callback_t cb){
-    if (!name){
+    if (!name || !*name){
         GLOG_ERR("register name is null > ilegal param !");
         return -1;
     }
     RpcValues args;
     //register(name, id, type)
     args.adds(name);
+    args.seti(0);//name register
     args.addi(id);
     args.addi(type);
     return NAME_ENV.rpc.call("name", args, std::bind(cb, std::placeholders::_1));
 }
+int     namesvc_exists(const std::string & name, int type, namesvc_exists_callback_t cb){
+    if (name.empty()){
+        GLOG_ERR("register name is null > ilegal param !");
+        return -1;
+    }
+    RpcValues args;
+    //register(name, id, type)
+    args.adds(name);
+    args.seti(1);//name exists
+    args.addi(type);//type
+    return NAME_ENV.rpc.call("name", args, [cb](int ret, const RpcValues & res){
+        if (ret){
+            cb(ret, true);
+        }
+        else {
+            cb(ret, res.geti() > 0 ? true: false);
+        }
+    });
+}
 const char *    namesvc_random(string & name, int type){
-#warning "todo implementation"    
+    //#warning "todo implementation"    
     return dcsutil::strcharsetrandom(name);    
     //namesvc_random(NAME_ENV.name_random, type);
 }

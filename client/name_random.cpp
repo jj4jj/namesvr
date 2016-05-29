@@ -23,7 +23,7 @@ struct name_random_t {
     int reload(const char * file){
         memset(&random_name_lib, 0, sizeof(random_name_lib));
         namelib.Clear();
-#warning "todo read file"
+        //#warning "todo read file"
         //namelib read from file
         for (int i = 0; i < namelib.list_size(); i++){
             const RandNameDesc & rRandNameDesc = namelib.list(i);
@@ -88,4 +88,7 @@ void            name_random_destroy(name_random_t * nr){
 const   char *  name_random(name_random_t * nr, std::string & namebuff, int type){
     return nr->random(namebuff, type);
 }
+
+
+
 NS_END()
